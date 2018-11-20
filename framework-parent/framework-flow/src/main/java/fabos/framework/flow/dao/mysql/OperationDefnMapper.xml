@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="fabos.framework.flow.dao.OperationDefnMapper">
+
+	<resultMap type="fabos.framework.flow.model.OperationDefinition" id="BaseResultMap">
+		<id column="ID" property="id" jdbcType="VARCHAR" />
+	    <result column="FTY_NAME" property="factoryName" jdbcType="VARCHAR" />
+	    <result column="OP_NAME" property="operationName" jdbcType="VARCHAR" />
+	    <result column="DESCRIPTION" property="description" jdbcType="VARCHAR" />
+	    <result column="OP_TYP" property="operationType" jdbcType="VARCHAR" />
+	    <result column="OP_VER" property="operationVersion" jdbcType="VARCHAR" />
+	    <result column="OP_GRP" property="operationGroup" jdbcType="VARCHAR" />
+	    <result column="OP_UNIT" property="operationUnit" jdbcType="VARCHAR" />
+	    <result column="TRK_OUT_TYP" property="trackOutType" jdbcType="VARCHAR" />
+	    <result column="PRT_LBL_TYP" property="printLabelType" jdbcType="VARCHAR" />
+	    <result column="DFLT_UNIT_GRD" property="defaultUnitGrade" jdbcType="VARCHAR" />
+	    <result column="AUTO_HLD" property="autoHold" jdbcType="VARCHAR" />
+	    <result column="BANK_TYP" property="bankType" jdbcType="VARCHAR"/>
+	    <result column="BANK_NAME" property="bankName" jdbcType="VARCHAR"/>
+	</resultMap>
+	
+	<sql id="Base_Column_List">
+		ID,
+		FTY_NAME,
+		OP_NAME,
+		OP_VER,
+		DESCRIPTION,
+		OP_TYP,
+		DTL_OP_TYP,
+		OP_GRP,
+		OP_UNIT,
+		DFLT_AREA_NAME,
+		TRK_OUT_TYP,
+		PRT_LBL_TYP,
+		DFLT_UNIT_GRD,
+		AUTO_HLD,
+		BANK_TYP,
+		BANK_NAME
+	</sql>
+
+    <select id="getListByCondition" parameterType="fabos.framework.flow.model.OperationDefinition" resultMap="BaseResultMap">
+		SELECT 
+		ID,
+		FTY_NAME,
+		OP_NAME,
+		OP_VER,
+		DESCRIPTION,
+		OP_TYP,
+		DTL_OP_TYP,
+		OP_GRP,
+		OP_UNIT,
+		DFLT_AREA_NAME,
+		TRK_OUT_TYP,
+		PRT_LBL_TYP,
+		DFLT_UNIT_GRD,
+		AUTO_HLD
+		FROM FLOW_OP_DEFN
+		WHERE 1 = 1
+		
+		AND  OP_TYP IN (SELECT OP_TYP FROM FLOW_OP_DEFN WHERE OP_NAME =#{operationName} )
+		
+		<if test="factoryName != null and factoryName != ''">
+        AND FTY_NAME = #{factoryName}
+        </if>
+	</select>
+	
+	<select id="getDetailOperationType" resultType="string">
+		SELECT 
+		f.DTL_OP_TYP
+		FROM 
+		WIP_LOT_INFO w, FLOW_OP_DEFN f
+		WHERE
+		w.FTY_NAME = f.FTY_NAME
+		AND w.PROC_OP_ID = f.ID
+		AND w.LOT_NAME = #{lotName}
+	</select>
+	
+	<!-- 实现功能getListByOpCheck,flow_op_chk和flow_op_defn连接 -->
+	<select id="getListByOpCheck" parameterType="java.lang.String" resultMap="BaseResultMap">
+		SELECT
+			<include refid="Base_Column_List"/>
+			FROM flow_op_defn AS defn, flow_op_chk AS chk
+			WHERE 
+				chk.OP_ID=#{proccessOperationName} AND 
+				chk.RULE_ID = defn.ID
+	</select>
+    
+</mapper>

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:mybatis="http://mybatis.org/schema/mybatis-spring" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd 
+	http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+	http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring.xsd
+	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+	http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+	<context:property-placeholder location="classpath:application.properties" />
+	
+	<!-- 使用annotation 自动注册bean,并检查@Required,@Autowired的属性已被注入 -->
+	<context:component-scan base-package="fabos.framework.flow" />
+	
+	<bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
+		<constructor-arg>
+			<bean class="com.zaxxer.hikari.HikariConfig">
+				<!-- hikaricp.configurationFile -->
+				<constructor-arg value="${hikaricp.configurationFile:/hikari.properties}" />
+			</bean>
+		</constructor-arg>
+	</bean>
+	
+	<bean class="tk.mybatis.spring.mapper.MapperScannerConfigurer">
+	    <property name="basePackage" value="fabos.framework.flow.dao" />
+	    <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory" />
+	    <property name="markerInterface" value="fabos.framework.core.orm.dao.BaseMapper" />
+	</bean>
+		
+	<bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<tx:annotation-driven transaction-manager="txManager"/>
+
+	<tx:advice id="txAdvice" transaction-manager="txManager">
+		<tx:attributes>
+			<tx:method name="get*" propagation="SUPPORTS" read-only="true" />
+			<tx:method name="find*" propagation="SUPPORTS" read-only="true" />
+			<tx:method name="save*" propagation="REQUIRED" />
+			<tx:method name="add*" propagation="REQUIRED" />
+			<tx:method name="update*" propagation="REQUIRED" />
+			<tx:method name="delete*" propagation="REQUIRED" />
+			<tx:method name="do*" propagation="REQUIRED" read-only="false" rollback-for="java.lang.Exception" />
+			<tx:method name="*" propagation="SUPPORTS" />
+		</tx:attributes>
+	</tx:advice>
+
+	<aop:config>
+		<aop:advisor advice-ref="txAdvice" pointcut="execution(* fabos.framework.flow.service.*.*(..))" />
+	</aop:config>
+	
+	<!-- -Dspring.profiles.active="mysql" -->
+	<beans profile="mysql">
+		<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+			<property name="dataSource" ref="dataSource" />
+			<property name="typeAliasesPackage" value="fabos.framework.flow.model" />
+			<property name="mapperLocations">
+		        <array>
+		            <value>classpath:fabos/framework/flow/dao/mysql/*.xml</value>
+		        </array>
+		    </property>
+			<property name="configLocation" value="classpath:mybatis-config.xml" />
+		</bean>
+	</beans>
+
+	<beans profile="oracle">
+		<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+			<property name="dataSource" ref="dataSource" />
+			<property name="typeAliasesPackage" value="fabos.framework.flow.model" />
+			<property name="mapperLocations">
+		        <array>
+		            <value>classpath:fabos/framework/flow/dao/oracle/*.xml</value>
+		        </array>
+		    </property>
+			<property name="configLocation" value="classpath:mybatis-config.xml" />
+		</bean>
+	</beans>
+
+</beans>
