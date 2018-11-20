@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+          http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+
+	<bean id="deployment" class="org.jboss.resteasy.spi.ResteasyDeployment">
+		<property name="resources">
+			<bean class="cec.jiutian.mes.core.comn.rest.JaxrsResourceFactoryBean" />
+		</property>
+		<property name="providers">
+			<list>
+				<bean class="org.jboss.resteasy.plugins.providers.jackson.Jackson2JsonpInterceptor">
+					<property name="wrapInTryCatch">
+						<value>false</value>
+					</property>
+					<!-- <property name="objectMapper" ref="customObjMapper" /> -->
+				</bean>
+				<bean class="cec.jiutian.mes.core.server.rest.filter.JaxrsLoggingFilter" />
+				<bean class="cec.jiutian.mes.core.server.rest.exception.MesServiceExceptionMapper" />
+				<bean class="cec.jiutian.mes.core.server.rest.exception.ConstraintExceptionMapper" />
+			</list>
+		</property>
+	</bean>
+	
+	<bean id="customObjMapper" class="com.fasterxml.jackson.databind.ObjectMapper">
+		<property name="dateFormat">
+			<bean class="java.text.SimpleDateFormat">
+				<constructor-arg type="java.lang.String" value="yyyy-MM-dd HH:mm:ss" />
+			</bean>
+		</property>
+	</bean>
+	
+	<util:map id="channelOptions" map-class="java.util.HashMap" key-type="java.lang.String" value-type="java.lang.Object">
+		<entry key="reuseAddress">
+			<value>true</value>
+		</entry>
+		<entry key="readBufferSize">
+			<value>1024</value>
+		</entry>
+	</util:map>
+
+	<bean id="nettyJaxrsServer" class="org.jboss.resteasy.plugins.server.netty.NettyJaxrsServer">
+		<property name="port">
+			<value>${rest.server.port}</value>
+		</property>
+		<property name="rootResourcePath">
+			<value>${rest.server.rootPath}</value>
+		</property>
+		<property name="deployment" ref="deployment" />
+		<property name="executorThreadCount">
+			<value>300</value>
+		</property>
+		<!-- <property name="channelOptions" ref="channelOptions" /> -->
+	</bean>
+
+</beans>
