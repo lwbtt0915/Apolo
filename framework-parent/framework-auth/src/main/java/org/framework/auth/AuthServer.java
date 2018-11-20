@@ -4,7 +4,7 @@ package org.framework.auth;
  * Hello world!
  *
  */
-public class App 
+public class AuthServer 
 {
     public static void main( String[] args )
     {
